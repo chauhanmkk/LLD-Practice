@@ -1,6 +1,6 @@
 package Splitwise;
 
 public class Split {
-    String user;
-    int amount;
+    User user;
+    double amount;
 }

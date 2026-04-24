@@ -4,5 +4,4 @@ public class ShowSeat {
     int showId;
     int seatId;
     String status;
-
 }

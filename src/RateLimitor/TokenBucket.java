@@ -1,29 +1,35 @@
 package RateLimitor;
 
 public class TokenBucket {
-    double capacity;
-    long lastRefillTime;
-    double currentToken;
-    double refillRate;
+    private final double capacity;
+    private long lastRefillTime; //in milliseconds
+    private double currentToken;
+    private final double refillRate; // in seconds
 
-    public TokenBucket(double capacity, long lastRefillTime, double currentToken, long refillRate) {
+    public TokenBucket(double capacity, double refillRate) {
         this.capacity = capacity;
-        this.lastRefillTime = lastRefillTime;
-        this.currentToken = currentToken;
+        this.lastRefillTime = System.currentTimeMillis();
+        this.currentToken = capacity;
         this.refillRate = refillRate;
     }
+
     public TokenBucket() {
-        this.capacity = 10;
-        this.lastRefillTime = System.currentTimeMillis();
-        this.currentToken = 10;
-        this.refillRate = (double) 1 /6;  //10 token per min default
+        this(10, 10.0 / 60);
     }
 
-    void refill() {
+    synchronized boolean allowRequest() {
+        refill();
+        if (currentToken >= 1) {
+            currentToken--;
+            return true;
+        }
+        return false;
+    }
+
+    private void refill() {
         long now = System.currentTimeMillis();
-        long elapsedTime = (now - lastRefillTime)/1000;
-        this.currentToken = Math.min(this.capacity, elapsedTime*refillRate + currentToken);
-        this.lastRefillTime = now;
+        double elapsedSeconds = (now - lastRefillTime) / 1000.0;
+        currentToken = Math.min(capacity, currentToken + elapsedSeconds * refillRate);
+        lastRefillTime = now;
     }
-
 }

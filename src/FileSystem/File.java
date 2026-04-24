@@ -1,24 +1,22 @@
 package FileSystem;
 
-public class File extends FileSystemComponent {
+public class File extends FileSystemNode {
     private String content;
 
-    File(String name, String content) {
-        super(name);
+    File(String name, Directory parent) {
+        super(name, parent);
+    }
+
+    String getContent() {
+        return this.content;
+    }
+
+    void writeContent(String content) {
         this.content = content;
     }
 
-    void content() {
-        System.out.println(this.content);
-    }
-
     @Override
-    public int getSize() {
-        return content.length();
-    }
-
-    @Override
-    public void display(String indent) {
-        System.out.println(indent + "📄 " + name + " (" + getSize() + " bytes)");
+    boolean isDirectory() {
+        return false;
     }
 }

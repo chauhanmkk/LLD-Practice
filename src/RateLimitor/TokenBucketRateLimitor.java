@@ -4,33 +4,27 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TokenBucketRateLimitor implements RateLimitorStrategy {
-
-    //client id -> TokenBucket
-    Map<Integer, TokenBucket> map;
+    private final Map<Client, TokenBucket> buckets;
+    private final double capacity;
+    private final double refillRate;
 
     TokenBucketRateLimitor() {
-        this.map = new ConcurrentHashMap<>();
+        this(10, 10.0 / 60);
     }
 
-    // we can use reentrant lock as well at bucket level
-    // introduce lock at bucket entity and acquire lock there and then refill and consume atomically
+    TokenBucketRateLimitor(double capacity, double refillRate) {
+        this.capacity = capacity;
+        this.refillRate = refillRate;
+        this.buckets = new ConcurrentHashMap<>();
+    }
+
     @Override
     public boolean allowRequest(Client client) {
-        map.putIfAbsent(client.clientId, new TokenBucket());
-        TokenBucket bucket = map.get(client.clientId);
-        synchronized (bucket) {
-            bucket.refill();
-            if(bucket.currentToken >= 1) {
-                bucket.currentToken--;
-                System.out.println("Ok");
-                return true;
-            }
-            System.out.println("Too many requests");
-            return false;
-        }
+        TokenBucket bucket = buckets.computeIfAbsent(client, ignored -> new TokenBucket(capacity, refillRate));
+        return bucket.allowRequest();
     }
 
     void addClient(Client client, TokenBucket bucket) {
-        // for custom client vs token mapping
+        buckets.put(client, bucket);
     }
 }
